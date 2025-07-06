@@ -1,0 +1,33 @@
+#navbarWrapper {
+    width: 100%;
+    position: fixed;   
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+#navbar {
+    width: 80%;
+    height: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+#navbarRightRegion {
+    display: flex;
+    width: 50%;
+    align-items: center;
+    justify-content: right;
+}
+
+#navbarRightRegion p {
+    margin-right: 2%;
+}
+
+#navbarRightRegion .logoutButtonWrapper {
+    margin-right: 2%;
+} 

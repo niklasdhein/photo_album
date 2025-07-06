@@ -1,0 +1,200 @@
+#albumPageWrapper {
+    width: 100%;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    align-items: center;
+}
+
+#albumPageTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    width: 98%;
+    padding: 1%;
+    border-bottom: solid rgba(255, 255, 255, 0.2) 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    z-index: 900;
+}
+
+#albumPageTop h1 {
+    color: #333;
+    width: 50%;
+    overflow: scroll;
+}
+
+#albumPageTopControls {
+    display: flex;
+    width: 50%;
+    align-items: center;
+    justify-content: right;
+}
+
+#albumPageTopControls label {
+    margin-right: 2%;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s ease;
+}
+
+#albumPageTopControls label:hover {
+    background-color: #0056b3;
+}
+
+#albumPageTopControls #homeButtonWrapper {
+    display: inline-block;
+}
+
+#albumPageContent {
+    margin-top: 7%;
+    width: 98%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#albumPageContent p {
+    color: #777;
+    margin: 3% 0;
+}
+
+#albumPageGalleryWrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+#albumPageGallery {
+    padding: 1%;
+    column-count: 3;
+    border-radius: 15px;
+    background-color: #eee;
+}
+
+.albumPageImageWrapper {
+    position: relative;
+    transition: 0.2s ease;
+}
+
+.albumPageImageWrapper img {
+    width: 100%;
+    border-radius: 15px;
+    margin-bottom: 2%;
+}
+
+.albumPageImageWrapper:hover {
+    scale: 1.01;
+}
+
+.albumPageDeleteButton {
+    position: absolute;
+    z-index: 100;
+    top: 20px;
+    right: 20px;
+    padding: 2%;
+    display: none;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background-color: #FD151B88;
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s ease;
+}
+
+.albumPageDeleteButton:hover {
+    background-color: #c4111788;
+}
+
+.albumPageImageWrapper:hover .albumPageDeleteButton {
+    display: flex;
+    align-items: center;
+}
+
+.albumPageDeleteButton img {
+    width: 25px;
+    filter: invert(1);
+    transition: 0.2s ease;
+}
+
+.albumPageDeleteButton:hover img {
+    filter: invert(0.4)
+}
+
+.albumPageSelectorBox {
+    position: absolute;
+    z-index: 100;
+    top: 30px;
+    left: 30px;
+    cursor: pointer;
+    display: none;
+    scale: 1.5;
+}
+
+.albumPageImageWrapper:hover .albumPageSelectorBox, .albumPageSelected {
+    display: inline;
+}
+
+#albumPageOnSelectedBarWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-radius: 15px;
+    background-color: #ccc;
+    padding: 1% 0;
+    margin-bottom: 1%;
+}
+
+#albumPageOnSelectedBarWrapper h2 {
+    color: white;
+    margin: 0 0 1% 1%;
+    text-shadow: 0 0 10px #999;
+}
+
+#albumPageOnSelectedBar {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+#albumPageOnSelectedBar button {
+    margin: 0 1%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5%;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background-color: #FD151B;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s ease;
+}
+
+#albumPageOnSelectedBar button:hover {
+    background-color: #c41117;
+}
+
+#albumPageOnSelectedBar button:hover img {
+    filter: invert(0.7);
+}
+
+#albumPageOnSelectedBar button img {
+    width: 25px;
+    filter: invert(1);
+    transition: 0.2s ease;
+}
+
+#albumPageOnSelectedBar p {
+    color: white;
+    font-weight: bold;
+}

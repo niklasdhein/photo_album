@@ -1,0 +1,9 @@
+.homeButtonWrapper button {
+    background: none;
+    border: none;
+}
+
+.homeButtonWrapper button img {
+    width: 25px;
+    height: 25px;
+}

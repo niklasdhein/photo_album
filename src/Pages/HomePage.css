@@ -1,0 +1,109 @@
+#homePageWrapper {
+    padding: 2%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+/* --- top bar --- */
+#homePageTop {
+    width: 100%;
+    display: flex;
+    justify-content: left;
+}
+
+
+
+/* --- albums --- */
+#homePageAlbumsWrapper {
+    margin-top: 5%;
+}
+
+#homePageAlbumsTop {
+    display: flex;
+    width: 21%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#homePageAlbumsTopRight {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    width: 50%;
+}
+
+#homePageAlbumsTopRight p {
+    margin-right: 5%;
+}
+
+#homePageAlbumsTopRight button {
+    border: none;
+    background: none;
+}
+
+#homePageAlbumsTopRight button img {
+    width: 35px;
+}
+
+#homePageAlbums {
+    margin-top: 1%;
+    column-count: 6;
+    column-gap: 1%;
+}
+
+.albumButtonWrapper button {
+    width: 100%;
+    margin-bottom: 3%;
+    border: none;
+    border-radius: 20%;
+    aspect-ratio: 1 / 1;
+}
+
+
+
+/* --- friends --- */
+#homePageFriendsWrapper {
+    margin-top: 2%;
+}
+
+#homePageFriendsTop {
+    display: flex;
+    width: 21%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#homePageFriendsTopRight {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    width: 50%;
+}
+
+#homePageFriendsTopRight p {
+    margin-right: 5%;
+}
+
+#homePageFriendsTopRight button {
+    border: none;
+    background: none;
+}
+
+#homePageFriendsTopRight button img {
+    width: 35px;
+}
+
+#homePageFriends {
+    margin-top: 1%;
+    column-count: 12;
+    column-gap: 1%;
+}
+
+.friendButtonWrapper button {
+    width: 100%;
+    border: none;
+    border-radius: 50%;
+    aspect-ratio: 1 / 1;
+}

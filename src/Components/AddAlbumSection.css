@@ -1,0 +1,17 @@
+#addAlbumSectionWrapper {
+    background-color: #eee;
+    border-radius: 5px;
+    margin-top: 1%;
+    padding: 1% 0;
+    width: 100%;
+    display: flex;
+}
+
+#addAlbumSectionWrapper input, #addAlbumSectionWrapper button {
+    font-size: 15px;
+    padding: 0.2%;
+}
+
+#addAlbumSectionWrapper input {
+    margin: 0 1%;
+}

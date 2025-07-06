@@ -1,0 +1,17 @@
+#galleryWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+#gallery {
+    column-count: 3;
+    width: 80%;
+}
+
+#gallery img {
+    width: 100%;
+    border-radius: 13px;
+    margin-bottom: 10px;
+}

@@ -1,0 +1,33 @@
+#registrationPageWrapper {
+    display: flex;
+    justify-content: center;
+}
+
+#registrationCard {
+    width: 20%;
+    margin-top: 10%;
+    padding: 2%;
+    border-radius: 15px;
+    box-shadow: 0 0 10px #aaa;
+}
+
+#registrationCard h1 {
+    margin-bottom: 12%;
+}
+
+#registrationCard p {
+    margin-bottom: 2%;
+}
+
+#registrationCard input {
+    width: 100%;
+    margin-bottom: 6%;
+    padding: 1%;
+}
+
+#registrationCard button {
+    padding: 1%;
+    background: white;
+    border: 2px solid green;
+    border-radius: 5px;
+}

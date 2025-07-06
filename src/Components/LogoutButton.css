@@ -1,0 +1,9 @@
+.logoutButtonWrapper button {
+    background: none;
+    border: none;
+}
+
+.logoutButtonWrapper button img {
+    width: 25px;
+    height: 25px;
+}

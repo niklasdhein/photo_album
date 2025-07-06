@@ -1,0 +1,11 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Roboto", sans-serif;
+}
+
+/* Applied to parent wrapper like element to center child(ren) */
+.flexCenter {
+    display: flex;
+    justify-content: center;
+}
