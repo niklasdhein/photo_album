@@ -1,6 +1,6 @@
-import "./DeleteImagesAlertBox.css";
+import "./DeleteAlbumAlert.css";
 
-function DeleteImageAlertBox({ message, hideAction, confirmAction, isShown }) {
+function DeleteAlbumAlertBox({ message, album, hideAction, confirmAction, isShown }) {
     return (
         (isShown)
         ?
@@ -14,7 +14,7 @@ function DeleteImageAlertBox({ message, hideAction, confirmAction, isShown }) {
                     <button 
                     id="deleteAlbumAlertBoxConfirm"
                     onClick={() => {
-                        confirmAction(imageName);
+                        confirmAction();
                         hideAction();
                     }}>Delete</button>
                 </div>  
@@ -25,4 +25,4 @@ function DeleteImageAlertBox({ message, hideAction, confirmAction, isShown }) {
     );
 }
 
-export default DeleteImageAlertBox;
+export default DeleteAlbumAlertBox;

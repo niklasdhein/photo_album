@@ -94,28 +94,6 @@ function AlbumPage() {
         .catch((e) => alert(e));
     }
 
-    // --- Some custom components ---
-    function OnSelectedBar() {
-        return (
-            <div id="albumPageOnSelectedBarWrapper">
-                <h2>Selection</h2>
-                <div id="albumPageOnSelectedBar">
-                    <button onClick={() => {
-                        setDeleteImagesAlert({isShown: true, 
-                        imagesToDelete: deleteImagesAlert.imagesToDelete})
-                        }}>
-                        <img src={trashIcon}/>
-                    </button>
-                    {
-                    (imagesSelected > 1)
-                    ? <p>Delete {imagesSelected} images</p>
-                    : <p>Delete 1 image</p>
-                    }
-                </div>
-            </div>
-        );
-    } 
-
     return (    
         <div id="albumPageWrapper">
             <DeleteImagesAlertBox 
@@ -130,7 +108,30 @@ function AlbumPage() {
             />
 
             <div id="albumPageTop">
-                <h1>{albumName}</h1>
+                <div id="albumPageTopLeft">
+                    <h1>{albumName}</h1>
+                    {
+                    (imagesSelected > 0)
+                    ? 
+                    <div id="albumPageSelectedInfo">
+                        <button 
+                        id="albumPageDeleteImagesButton"
+                        onClick={() => {
+                            setDeleteImagesAlert({
+                                isShown: true,
+                                imagesToDelete: deleteImagesAlert.imagesToDelete,
+                            })
+                        }}
+                        ><img src={trashIcon}/></button>
+                        {
+                        (imagesSelected == 1)
+                        ? <p>Delete 1 image</p>
+                        : <p>Delete {imagesSelected} images</p>
+                        }
+                    </div>
+                    : null
+                    }
+                </div>
                 <div id="albumPageTopControls">
                     <label>
                         {
@@ -151,7 +152,6 @@ function AlbumPage() {
             </div>
 
             <div id="albumPageContent">
-                { (imagesSelected > 0) ? <OnSelectedBar/> : null }
                 {
                 (imageFileNames.length > 0)
                 ?

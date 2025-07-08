@@ -10,7 +10,16 @@
 #homePageTop {
     width: 100%;
     display: flex;
-    justify-content: left;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#homePageTop h1 {
+    transition: 0.2s ease;
+}
+
+#homePageTop h1:hover {
+    scale: 1.01; 
 }
 
 
@@ -53,12 +62,69 @@
     column-gap: 1%;
 }
 
+#homePageAddAlbumButton, #homePageAddAlbumButton img {
+    transition: 0.2s ease;
+}
+
+#homePageAddAlbumButton:hover {
+    scale: 1.05;
+}
+
+#homePageAddAlbumButton:hover img {
+    filter: invert(0.8);
+}
+
 .albumButtonWrapper button {
     width: 100%;
     margin-bottom: 3%;
     border: none;
     border-radius: 20%;
     aspect-ratio: 1 / 1;
+}
+
+.albumWrapper {
+    position: relative;
+    transition: 0.2s ease;
+}
+
+.albumWrapper:hover {
+    scale: 1.02;
+}
+
+.albumDeleteButton {
+    position: absolute;
+    z-index: 100;
+    top: 20px;
+    right: 20px;
+    padding: 2%;
+    cursor: pointer;
+    display: none;
+    border: none;
+    border-radius: 10px;
+    background-color: #FD151B88;
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s ease;
+}
+
+.albumWrapper:hover .albumDeleteButton {
+    display: flex;
+    align-items: center;
+}
+
+.albumDeleteButton:hover {
+    background-color: #c4111788;
+}
+
+.albumDeleteButton img {
+    width: 25px;
+    filter: invert(1);
+    transition: 0.2s ease;
+}
+
+.albumDeleteButton:hover img {
+    filter: invert(0.6)
 }
 
 
@@ -99,6 +165,18 @@
     margin-top: 1%;
     column-count: 12;
     column-gap: 1%;
+}
+
+#homePageAddFriendButton, #homePageAddFriendButton img {
+    transition: 0.2s ease;
+}
+
+#homePageAddFriendButton:hover {
+    scale: 1.05;
+}
+
+#homePageAddFriendButton:hover img {
+    filter: invert(0.8);
 }
 
 .friendButtonWrapper button {

@@ -3,7 +3,6 @@ import "./Navbar.css"
 import { useState, useEffect } from "react";
 
 // --- custom components ---
-import LogoutButton from "./LogoutButton";
 import HomeButton from "./HomeButton";
 
 function Navbar() {
@@ -20,11 +19,6 @@ function Navbar() {
         .catch((e) => alert(e));
     }, []);
 
-    // This function is called, when logout is done
-    function logoutCallback() {
-        setEmail(null);
-    }
-
     return (
         <div id="navbarWrapper">
             <div id="navbar">
@@ -33,7 +27,6 @@ function Navbar() {
                 </div>
                 <div id="navbarRightRegion">
                     <p>Logged in as {email}</p>
-                    <LogoutButton logoutCallback={logoutCallback}/>
                     <HomeButton/>
                 </div>
             </div>

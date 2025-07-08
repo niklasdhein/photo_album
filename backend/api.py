@@ -205,6 +205,87 @@ def get_albums():
 
 
 
+# +--------------+
+# | DELETE ALBUM |
+# +--------------+
+
+@app.route("/delete_album", methods=["POST"])
+def delete_album():
+    # Return if no user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+
+    email = session.get("email")
+    data = request.get_json()
+
+    # Check for valid request
+    try:
+        album_id = int(data.get("albumId"))
+    except ValueError:
+        return jsonify(ans="Invalid albumId"), 400
+    
+    # Check if the user actually owns the passed album
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT albums.id
+    FROM albums
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE users.email = ? AND albums.id = ?
+    """, (email, album_id))
+    row = cursor.fetchone()
+
+    # Return if no album to that id in relation to logged in user was found
+    # --> user does not own this album (somebody trying hacky stuff)
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+
+    # Get all images from album
+    cursor.execute("""
+    SELECT images.id, images.extension
+    FROM images
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    WHERE albums.id = ?
+    """,(album_id,))
+    rows = cursor.fetchall()
+
+    # Only remove images from album if the album is not empty
+    if rows:
+        # Get ids and filenames of all album images
+        image_ids = [int(r["id"]) for r in rows]
+        image_filenames = [f"{r["id"]}.{r["extension"]}" for r in rows]    
+
+        # Deleting album images from database
+        placeholders = ",".join("?"*len(image_ids))
+        cursor.execute(f"""
+        DELETE FROM images
+        WHERE id IN ({placeholders})
+        """, image_ids)
+
+        # Remove images of album from drive
+        for i in image_filenames:
+            filepath = os.path.join(UPLOADED_IMAGES_FOLDER, i)
+            if not os.path.exists(filepath):
+                print(f"Could not find {filepath} in order to delete")
+                continue
+            os.remove(filepath)
+            print(f"Deleted {filepath} from drive")
+
+    # Remove album from database
+    cursor.execute("""
+    DELETE FROM albums
+    WHERE id = ?
+    """, (album_id,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(ans=f"Deleted album {album_id}"), 201
+
+
+
 # +-------------+
 # | POST IMAGES |
 # +-------------+
@@ -355,9 +436,9 @@ def get_image_file(image_file_name):
 
 
 
-# +--------------+
-# | DELETE IMAGE |
-# +--------------+
+# +---------------+
+# | DELETE IMAGES |
+# +---------------+
 
 @app.route("/delete_images", methods=["POST"])
 def delete_images():

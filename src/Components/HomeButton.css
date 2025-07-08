@@ -1,9 +1,19 @@
 .homeButtonWrapper button {
     background: none;
     border: none;
+    transition: 0.2s ease;
+}
+
+.homeButtonWrapper button:hover {
+    scale: 1.1;
 }
 
 .homeButtonWrapper button img {
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
+    transition: 0.2s ease;
+}
+
+.homeButtonWrapper button:hover img {
+    filter: invert(0.7)
 }
