@@ -115,6 +115,8 @@ function HomePage() {
                     }
                     <div id="homePageAlbums">
                         {
+                        (loadedAlbums.length > 0)
+                        ?
                         loadedAlbums.map((album) => (
                             <div class="albumWrapper">
                                 <AlbumButton 
@@ -130,6 +132,7 @@ function HomePage() {
                                 ><img src={trashIcon}/></button>
                             </div>
                         ))
+                        : <p>Create your first album!</p>
                         }
                     </div>
                 </div>

@@ -50,6 +50,7 @@
 #homePageAlbumsTopRight button {
     border: none;
     background: none;
+    margin-left: 2%;
 }
 
 #homePageAlbumsTopRight button img {
@@ -60,6 +61,11 @@
     margin-top: 1%;
     column-count: 6;
     column-gap: 1%;
+}
+
+#homePageAlbums p {
+    color: #777;
+    font-style: italic;
 }
 
 #homePageAddAlbumButton, #homePageAddAlbumButton img {
@@ -155,6 +161,7 @@
 #homePageFriendsTopRight button {
     border: none;
     background: none;
+    margin-left: 2%;
 }
 
 #homePageFriendsTopRight button img {

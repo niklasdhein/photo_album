@@ -517,5 +517,401 @@ images deleted: {image_names}
 
     return jsonify(ans=f"{len(ids)} image(s) deleted"), 200
 
+
+
+# +---------+
+# | ADD TAG |
+# +---------+
+
+@app.route("/add_tag", methods=["POST"])
+def add_tag():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    
+    data = request.get_json()
+
+    # Check for bad request
+    if not data.get("imageName") or not data.get("tag"):
+        return jsonify(ans="Bad request"), 400
+
+    image_name = data.get("imageName")
+    tag = data.get("tag")
+
+    # Extract id from image_name
+    id, _ = os.path.splitext(image_name)
+    try:
+        id = int(id)
+    except ValueError:
+        return jsonify(ans="Invalid imageId"), 400
+    
+    # Check in database if the requested image is his
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT images.id
+    FROM images
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE images.id = ? AND users.email = ?
+    """, (id, session.get("email")))
+
+    row = cursor.fetchone()
+
+    # Return if user does not own this image
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+    
+    # Actually create tag in database
+    cursor.execute("""
+    INSERT INTO tags (name)
+    VALUES (?)
+    """, (tag,))
+    tag_id = cursor.lastrowid
+
+    cursor.execute("""
+    INSERT INTO tag_connectors (image_id, tag_id)
+    VALUES (?, ?)
+    """, (id, tag_id))
+
+    # EXTRA - Run through database and remove all tags that are not connected to any image
+    # This can happen if an image with tags on it or an album which contained images was deleted.
+    # This solution is a bit crappy but gets the job done. It prevents memory flood by unused tags
+    cursor.execute("""
+    DELETE FROM tags
+    WHERE tags.id NOT IN (SELECT tag_id FROM tag_connectors)
+    """)
+    print("[ NOTE ] Deleted unused tags")
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(ans=f"Created tag {tag} for image {image_name}"), 201     
+
+
+
+# +------------------+
+# | ADD EXISTING TAG |
+# +------------------+
+
+@app.route("/add_existing_tag", methods=["POST"])
+def add_existing_tag():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    
+    data = request.get_json()
+
+    # Check for bad request
+    if not data.get("imageName") or not data.get("tagId"):
+        return jsonify(ans="Bad request"), 400
+
+    image_name = data.get("imageName")
+    tag_id = data.get("tagId")
+
+    # Extract id from image_name
+    image_id, _ = os.path.splitext(image_name)
+    try:
+        image_id = int(image_id)
+        tag_id = int(tag_id)
+    except ValueError:
+        return jsonify(ans="Bad request"), 400
+    
+    # Check in database if the requested image is his
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT images.id
+    FROM images
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE images.id = ? AND users.email = ?
+    """, (image_id, session.get("email")))
+    row = cursor.fetchone()
+
+    # Return if user does not own this image
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+    
+
+    # Check if the tag is already connected to the image
+    cursor.execute("""
+    SELECT * 
+    FROM tag_connectors
+    WHERE image_id = ? AND tag_id = ?
+    """, (image_id, tag_id))
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return jsonify(ans="Conflict"), 409
+    
+    # Actually connect image and tag
+    cursor.execute("""
+    INSERT INTO tag_connectors (image_id, tag_id)
+    VALUES (?, ?)
+    """, (image_id, tag_id))
+    conn.commit()
+    conn.close()
+
+    return jsonify(ans=f"Added tag {tag_id} to image {image_id}"), 201
+
+
+# +----------+
+# | GET TAGS |
+# +----------+
+
+@app.route("/get_tags", methods=["GET"])
+def get_tags():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    
+    image_name = request.args.get("imageName")
+    
+    # Check for bad request
+    if not image_name:
+        return jsonify(ans="Bad request"), 400
+
+
+    # Extract id from image_name
+    image_id, _ = os.path.splitext(image_name)
+    try:
+        image_id = int(image_id)
+    except ValueError:
+        return jsonify(ans="Invalid imageId"), 400
+    
+    # Check if the passed id is actually an image of the user
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT images.id
+    FROM images
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE images.id = ? AND users.email = ?
+    """, (image_id, session.get("email")))
+    row = cursor.fetchone()
+
+    # Return if the requested image is not the users
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+
+    # Actually get all tags from a user
+    cursor.execute("""
+    SELECT DISTINCT tags.id, tags.name
+    FROM tags
+    JOIN tag_connectors ON tags.id = tag_connectors.tag_id
+    JOIN images ON images.id = tag_connectors.image_id
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE users.email = ?
+    ORDER BY tags.name
+    """, (session.get("email"),))
+
+    tags = [{"id": t["id"], "name": t["name"]} for t in cursor.fetchall()]
+    conn.close()
+
+    return jsonify(tags), 201
+
+
+
+# +-------------------+
+# | GET TAGS OF IMAGE |
+# +-------------------+
+
+@app.route("/get_tags_of_image", methods=["GET"])
+def get_tags_of_image():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    
+    image_name = request.args.get("imageName")
+    
+    # Check for bad request
+    if not image_name:
+        return jsonify(ans="Bad request"), 400
+
+    # Extract id from image_name
+    image_id, _ = os.path.splitext(image_name)
+    try:
+        image_id = int(image_id)
+    except ValueError:
+        return jsonify(ans="Invalid imageId"), 400
+
+    # Check if the passed id is actually an image of the user
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT images.id
+    FROM images
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE images.id = ? AND users.email = ?
+    """, (image_id, session.get("email")))
+    row = cursor.fetchone()
+
+    # Return if the requested image is not the users
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+    
+    # Actually get all tags from that image
+    cursor.execute("""
+    SELECT tags.id, tags.name
+    FROM tags
+    JOIN tag_connectors ON tags.id = tag_connectors.tag_id
+    JOIN images ON tag_connectors.image_id = images.id
+    WHERE images.id = ?
+    ORDER BY tags.name
+    """, (image_id,))
+    
+    tags = [{"id": t["id"], "name": t["name"]} for t in cursor.fetchall()]
+    conn.close()
+
+    return jsonify(tags), 201
+
+
+
+# +------------+
+# | DELETE TAG |
+# +------------+
+
+@app.route("/delete_tag", methods=["POST"])
+def delete_tag():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    email = session.get("email")
+
+    # Get and validate tag_id
+    data = request.get_json()
+    tag_id = data.get("tagId")
+    if not tag_id:
+        return jsonify(ans="Bad request"), 400
+    
+    # Check if the user owns that tag
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT tags.id
+    FROM tags
+    JOIN tag_connectors ON tags.id = tag_connectors.tag_id
+    JOIN images ON images.id = tag_connectors.image_id
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE users.email = ? AND tags.id = ?
+    """, (email, tag_id))
+    row = cursor.fetchone()
+
+    # If not tag was found user is unauthorized
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+
+    # Delete tag from database, connector will be deleted automatically
+    cursor.execute("""
+    DELETE FROM tags
+    WHERE id = ?    
+    """, (tag_id,))
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(ans=f"Deleted tag {tag_id}")
+
+
+
+# +-----------------------+
+# | DELETE TAG FROM IMAGE |
+# +-----------------------+
+
+@app.route("/delete_tag_from_image", methods=["POST"])
+def delete_tag_from_image():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    email = session.get("email")
+
+    # Get and validate tag_id
+    data = request.get_json()
+    tag_id = data.get("tagId")
+    if not tag_id:
+        return jsonify(ans="Bad request"), 400
+    try:
+        tag_id = int(tag_id)
+    except ValueError:
+        return jsonify(ans="Invalid tagId"), 400
+    
+    # Extract id from image_name
+    image_name = data.get("imageName")
+    image_id, _ = os.path.splitext(image_name)
+    try:
+        image_id = int(image_id)
+    except ValueError:
+        return jsonify(ans="Invalid imageId"), 400
+    
+    # Check if the user owns that tag and if the tag is actually connected to image
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT tags.id
+    FROM tags
+    JOIN tag_connectors ON tags.id = tag_connectors.tag_id
+    JOIN images ON images.id = tag_connectors.image_id
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE users.email = ? AND images.id = ? AND tags.id = ? 
+    """, (email, image_id, tag_id))
+    row = cursor.fetchone()
+
+    # If no tag was found user is unauthorized
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+    
+    # Check if tag is only connected to one image
+    # If it is, this means this image is the last one the tag belongs to, so just remove the
+    # whole tag instead of the connection.
+    # If only the connection would be removed there would remain an unused tag.
+    cursor.execute("""
+    SELECT images.id
+    FROM images
+    JOIN tag_connectors ON images.id = tag_connectors.image_id
+    JOIN tags ON tag_connectors.tag_id = tags.id
+    WHERE tags.id = ?
+    """, (tag_id,))
+    rows = cursor.fetchall()
+
+    # Delete complete tag
+    if len(rows) == 1:
+        cursor.execute("""
+        DELETE FROM tags
+        WHERE id = ?
+        """, (tag_id,))
+        conn.commit()
+        conn.close()
+        return jsonify(ans=f"Deleted tag {tag_id} since {image_id} was the last image it was connected to"), 201
+
+    # Just delete connection between image and tag
+    else:
+        cursor.execute("""
+        DELETE FROM tag_connectors
+        WHERE image_id = ? AND tag_id = ?
+        """, (image_id, tag_id))
+        conn.commit()
+        conn.close()
+        return jsonify(ans=f"Deleted connection between tag {tag_id} and image {image_id}")
+
 if __name__ == "__main__":
     app.run(debug=True)

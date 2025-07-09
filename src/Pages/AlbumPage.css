@@ -12,6 +12,7 @@
     justify-content: space-between;
     position: fixed;
     width: 98%;
+    height: 60px;
     padding: 1%;
     border-bottom: solid rgba(255, 255, 255, 0.2) 1px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -34,7 +35,14 @@
 #albumPageSelectedInfo {
     display: flex;
     width: 50%;
+    padding: 1.5%;
     align-items: center;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 2px 2px 5px rgba(10%, 10%, 10%, 10%);
 }
 
 #albumPageDeleteImagesButton {
@@ -68,7 +76,6 @@
 #albumPageSelectedInfo p {
     margin-left: 2%;
     color: #333;
-    text-shadow: 0 0 7px rgba(255, 255, 255, 1);
     font-weight: bold;
 }
 
@@ -106,7 +113,7 @@
     align-items: center;
 }
 
-#albumPageContent p {
+#albumPageUploadP, #albumPageEndP {
     color: #777;
     margin: 3% 0;
 }
@@ -187,4 +194,98 @@
 
 .albumPageImageWrapper:hover .albumPageSelectorBox, .albumPageSelected {
     display: inline;
+}
+
+
+/* Wrapper for all of tags stuff - bottom bar like */
+.albumPageTagsWrapper {
+    position: absolute;
+    z-index: 100;
+    bottom: 30px;
+    left: 20px;
+    width: 90%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    overflow: scroll;
+}
+
+/* Button used to interact with tag creation menu */
+.albumPageTagButton {
+    padding: 2%;
+    display: none;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s ease;
+}
+
+.albumPageImageWrapper:hover .albumPageTagButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.albumPageTagButton:hover {
+    background-color: rgba(202, 202, 202, 0.5);
+}
+
+.albumPageTagButton img {
+    width: 20px;
+    border-radius: 0;
+    filter: invert(1);
+    transition: 0.2s ease;
+}
+
+.albumPageTagButton:hover img {
+    filter: invert(0.6);
+}
+
+/* p element shown when no tags exist for an image */ 
+.albumPageTagP {
+    display: none;
+    color: white;
+    text-shadow: 0 0 5px black;
+}
+
+.albumPageTagButton:hover ~ .albumPageTagP {
+    display: inline;
+}
+
+/* Wrapper for each single rendered tag */
+.albumPageTagWrapper {
+    display: none;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 2%;
+    cursor: pointer;
+}
+
+.albumPageTagsWrapper:hover .albumPageTagWrapper {
+    display: flex;
+}
+
+/* Text inside a tag */
+.albumPageTagWrapper p {
+    color: black;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.albumPageTagWrapper img {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    padding: 4px;
+    filter: invert(0.2);
+}
+
+.albumPageTagWrapper img:hover {
+    filter: invert(1);
 }
