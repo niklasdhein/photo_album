@@ -11,30 +11,40 @@ import DeleteImagesAlertBox from "../Components/DeleteImagesAlertBox";
 import AddTagAlert from "../Components/AddTagAlert";
 
 function AlbumPage() {
+    // URL params stored for access here
     const [searchParams] = useSearchParams();
 
+    // Album id and name stored for later use
     const albumId = searchParams.get("id");
     const albumName = searchParams.get("name");
 
+    // Stores file names of images the user wants to upload
     const [imageFileNames, setImageFileNames] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
 
+    // Information about the alert shown when user wants to delete images
     const [deleteImagesAlert, setDeleteImagesAlert] = useState({
         isShown: false,
         imagesToDelete: [],
     });
     const [imagesSelected, setImagesSelected] = useState(0);
 
+    // Information about the tag menu rendered in an alert-like style
     const [tagAlert, setTagAlert] = useState({
         isShown: false,
         imageName: null,
     });
 
+    // Stores loaded tags of an image
     const [imageTags, setImageTags] = useState([]);
+
+    // Stores all the loaded tags an album includes
+    const [albumTags, setAlbumTags] = useState([]);
 
     // Called on page (re)load
     useEffect(() => {
         getImages();
+        getAlbumTags();
     }, []);
 
     // Sends an post request to the backend to delete the passed image
@@ -129,8 +139,22 @@ function AlbumPage() {
                 imageName: imageName,
             })
         })
-        .then((res) => {if (!res.ok) return res.json(); else getTags(imageName)})
+        .then((res) => {if (!res.ok) return res.json(); else {getTags(imageName); getAlbumTags();}})
         .then((data) => {if (data) alert(data.ans);})
+        .catch((e) => alert(e));
+    }
+
+    // Gets all tags used in that album
+    function getAlbumTags() {
+        fetch("http://localhost:5000/get_tags_of_album?albumId="+albumId, {
+            method: "GET",
+            credentials: "include",
+        })   
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.ans) alert(data.ans);
+            else setAlbumTags(data);
+        })
         .catch((e) => alert(e));
     }
 
@@ -151,6 +175,7 @@ function AlbumPage() {
                 isShown={tagAlert.isShown}
                 imageName={tagAlert.imageName}
                 hideAction={() => setTagAlert({isShown: false, imageName: null,})}
+                reloadAlbumTags={getAlbumTags}
             />
 
             <div id="albumPageTop">
@@ -202,16 +227,31 @@ function AlbumPage() {
                 (imageFileNames.length > 0)
                 ?
                 <div id="albumPageGalleryWrapper">
+                    {
+                    (albumTags.length > 0)
+                    ?
+                    <div id="albumPageTagDisplayer">
+                    {
+                    albumTags.map((t) => (<p key={`album_tag_${t.id}`}>{t.name}</p>))
+                    }
+                    </div>
+                    : null
+                    }  
                     <div id="albumPageGallery">
                     {
                         imageFileNames.map((imageName) => (
-                            <div key={imageName} class="albumPageImageWrapper">
+                            <div 
+                            key={imageName} 
+                            className="albumPageImageWrapper"
+                            onMouseEnter={() => getTags(imageName)}
+                            onMouseLeave={() => setImageTags([])}
+                            >
                                 <img src={`http://localhost:5000/get_image_file/${imageName}`}/>
                                 {
                                 (imagesSelected == 0)
                                 ?
                                 <button 
-                                class="albumPageDeleteButton"
+                                className="albumPageDeleteButton"
                                 onClick={() => setDeleteImagesAlert({
                                     isShown: true,
                                     imagesToDelete: [...deleteImagesAlert.imagesToDelete, imageName],
@@ -246,12 +286,9 @@ function AlbumPage() {
                                     })
                                 }}
                                 />
-                                <div 
-                                class="albumPageTagsWrapper" 
-                                onMouseEnter={() => getTags(imageName)}
-                                onMouseLeave={() => setImageTags([])}>
+                                <div className="albumPageTagsWrapper">
                                     <button
-                                    class="albumPageTagButton"
+                                    className="albumPageTagButton"
                                     onClick={() => setTagAlert({
                                         isShown: true,
                                         imageName: imageName,
@@ -260,9 +297,17 @@ function AlbumPage() {
                                     </button>
                                     {
                                     (imageTags.length > 0)
-                                    ?
+                                    ? 
+                                        (imageTags.length == 1)
+                                        ? <p className="albumPageTagAmount">1 tag</p>
+                                        : <p className="albumPageTagAmount">{imageTags.length} tags</p>
+                                    : null
+                                    }
+                                    {
+                                    (imageTags.length > 0)
+                                    ? 
                                     imageTags.map((t) => (
-                                        <div class="albumPageTagWrapper" key={t.id}>
+                                        <div className="albumPageTagWrapper" key={t.id}>
                                             <p>{t.name}</p>
                                             <img 
                                             src={xIcon}
@@ -273,7 +318,7 @@ function AlbumPage() {
                                         </div>
                                     ))
                                     :
-                                    <p class="albumPageTagP">Add tag</p>
+                                    <p className="albumPageTagP">Add tag</p>
                                     }
                                 </div>    
                             </div>

@@ -781,6 +781,58 @@ def get_tags_of_image():
 
 
 
+# +-------------------+
+# | GET TAGS OF ALBUM |
+# +-------------------+
+
+@app.route("/get_tags_of_album", methods=["GET"])
+def get_tags_of_album():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401    
+    email = session.get("email")
+
+    # Check for bad request
+    album_id = request.args.get("albumId")
+    if not album_id:
+        return jsonify(ans="Bad request"), 400   
+    try:
+        album_id = int(album_id)
+    except ValueError:
+        return jsonify(ans="Bad request"), 400 
+    
+    # Check if the album actually is owned by the user
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT albums.id
+    FROM albums
+    JOIN album_connectors ON albums.id = album_connectors.album_id
+    JOIN users ON album_connectors.user_id = users.id
+    WHERE users.email = ? AND albums.id = ?
+    """,(email, album_id))
+    row = cursor.fetchone()
+
+    if not row:
+        conn.close()
+        return jsonify(ans="Unauthorized"), 401
+    
+    # Get all tags used by images in that album
+    cursor.execute("""
+    SELECT DISTINCT tags.id, tags.name
+    FROM tags
+    JOIN tag_connectors ON tags.id = tag_connectors.tag_id
+    JOIN images ON tag_connectors.image_id = images.id
+    JOIN image_connectors ON images.id = image_connectors.image_id
+    JOIN albums ON image_connectors.album_id = albums.id
+    WHERE albums.id = ?
+    ORDER BY tags.name
+    """, (album_id,))
+    tags = [{"id": r["id"], "name": r["name"]} for r in cursor.fetchall()]
+    conn.close()
+
+    return jsonify(tags), 201
+
+
 # +------------+
 # | DELETE TAG |
 # +------------+

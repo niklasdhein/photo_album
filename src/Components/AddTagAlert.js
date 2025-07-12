@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 
 import xIcon from "../Icons/x.png";
 
-function AddTagAlert({ isShown, imageName, hideAction }) {
+function AddTagAlert({ isShown, imageName, hideAction, reloadAlbumTags }) {
     const [tagInput, setTagInput] = useState("");   // Stores tag input field's value
-    const [tags, setTags] = useState([]);            // All tags from the user
+    const [tags, setTags] = useState([]);           // All tags from the user
     
     // If alert is shown load tags
     useEffect(() => {
@@ -29,6 +29,7 @@ function AddTagAlert({ isShown, imageName, hideAction }) {
         .then((data) => {
             setTagInput("");
             loadTags();
+            reloadAlbumTags();
             if (data) alert(data.ans);
             else hideAction();
         })
@@ -49,6 +50,7 @@ function AddTagAlert({ isShown, imageName, hideAction }) {
         .then((data) => {
             setTagInput("");
             loadTags();
+            reloadAlbumTags();
             if (data) alert(data.ans);
             else hideAction();
         })
@@ -69,6 +71,7 @@ function AddTagAlert({ isShown, imageName, hideAction }) {
             if (!res.ok) return res.json();
         })
         .then((data) => {
+            reloadAlbumTags();
             loadTags();
             if (data) alert(data.ans);
         })
@@ -96,11 +99,6 @@ function AddTagAlert({ isShown, imageName, hideAction }) {
             <div id="addTagAlertWidget">
                 <div id="addTagAlertHead">
                     <h2>Use a new tag</h2>
-                    <button onClick={() => {
-                        hideAction();
-                        setTags([]);            // Just clean
-                        setTagInput("");        // up a little
-                    }}>Cancel</button>
                 </div>
                 <div id="addTagAlertInputWrapper">
                     <input 
@@ -133,6 +131,11 @@ function AddTagAlert({ isShown, imageName, hideAction }) {
                         <p id="addTagAlertPlaceholderP">No tags created yet</p>
                     }
                 </div>
+                <button onClick={() => {
+                        hideAction();
+                        setTags([]);            // Just clean
+                        setTagInput("");        // up a little
+                    }}>Cancel</button>
             </div>
         </div>
         : 
