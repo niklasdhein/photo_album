@@ -41,6 +41,9 @@ function AlbumPage() {
     // Stores all the loaded tags an album includes
     const [albumTags, setAlbumTags] = useState([]);
 
+    // Stores which tag the user has selected
+    const [selectedTag, setSelectedTag] = useState({id: null, name: null});
+
     // Called on page (re)load
     useEffect(() => {
         getImages();
@@ -73,13 +76,16 @@ function AlbumPage() {
     }
             
     // Gets all image file names of current album from backend
-    function getImages() {
-        fetch("http://localhost:5000/get_images?albumId="+albumId, {
+    function getImages(tagId="") {
+        fetch("http://localhost:5000/get_images?albumId="+albumId+"&tagId="+tagId, {
             method: "GET",
             credentials: "include",
         })
         .then((res) => res.json())
-        .then((data) => setImageFileNames(data.ans))
+        .then((data) => {
+            if (data.ans) alert(data.ans);
+            else setImageFileNames(data);
+        })
         .catch((e) => alert(e));
     }
 
@@ -232,7 +238,22 @@ function AlbumPage() {
                     ?
                     <div id="albumPageTagDisplayer">
                     {
-                    albumTags.map((t) => (<p key={`album_tag_${t.id}`}>{t.name}</p>))
+                    albumTags.map((t) => (
+                        <button
+                        key={`album_tag_${t.id}`}
+                        onClick={() => {
+                            if (selectedTag.id != t.id && selectedTag.name != t.name) {
+                                setSelectedTag({id: t.id, name: t.name});
+                                getImages(t.id);
+                            }
+                            else {
+                                setSelectedTag({id: null, name: null});
+                                getImages();
+                            }
+                        }}
+                        className={(t.id === selectedTag.id) ? "selectedTag" : ""}
+                        >{t.name}</button>
+                    ))
                     }
                     </div>
                     : null

@@ -140,8 +140,9 @@
     overflow: scroll;
 } 
 
-#albumPageTagDisplayer > p {
+#albumPageTagDisplayer > button {
     background-color: #eee;
+    border: 2px solid transparent;
     border-radius: 12px;
     padding: 1%; 
     font-weight: bold;
@@ -151,9 +152,14 @@
     transition: 0.2s ease;
 }
 
-#albumPageTagDisplayer > p:hover {
+#albumPageTagDisplayer > button:hover {
     scale: 1.05;
     color: #999;
+}
+
+#albumPageTagDisplayer > .selectedTag {
+    background-color: #fafafa;
+    border: 2px solid #999;
 }
 
 /* Actual gallery which renders images */

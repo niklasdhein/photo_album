@@ -363,21 +363,40 @@ def get_images():
     if not session.get("isLoggedIn"):
         return jsonify(ans="Unauthorized"), 401
 
-    # Get album id from post request
-    album_id = int(request.args.get("albumId"))
+    try:
+        album_id = int(request.args.get("albumId"))
+        tag_id = request.args.get("tagId")
+        if tag_id != "": tag_id = int(tag_id)
+        else: tag_id = None
+    except ValueError: 
+        return jsonify(ans="Bad request"), 400
 
-    # Get all images of an album
     conn, cursor = get_conn_and_cursor()
-    cursor.execute("""
-    SELECT images.id, images.extension
-    FROM images
-    JOIN image_connectors ON image_connectors.image_id = images.id
-    JOIN albums ON albums.id = image_connectors.album_id
-    JOIN album_connectors ON album_connectors.album_id = albums.id
-    JOIN users ON users.id = album_connectors.user_id
-    WHERE users.email = ? AND albums.id = ?
-    ORDER BY images.id DESC
-    """, (session.get("email"),album_id))
+
+    if (tag_id):
+        cursor.execute("""
+        SELECT images.id, images.extension
+        FROM images
+        JOIN image_connectors ON image_connectors.image_id = images.id
+        JOIN albums ON albums.id = image_connectors.album_id
+        JOIN album_connectors ON album_connectors.album_id = albums.id
+        JOIN users ON users.id = album_connectors.user_id
+        JOIN tag_connectors ON tag_connectors.image_id = images.id
+        JOIN tags ON tag_connectors.tag_id = tags.id
+        WHERE users.email = ? AND albums.id = ? AND tags.id = ?
+        ORDER BY images.id DESC 
+        """, (session.get("email"), album_id, tag_id))
+    else:
+        cursor.execute("""
+        SELECT images.id, images.extension
+        FROM images
+        JOIN image_connectors ON image_connectors.image_id = images.id
+        JOIN albums ON albums.id = image_connectors.album_id
+        JOIN album_connectors ON album_connectors.album_id = albums.id
+        JOIN users ON users.id = album_connectors.user_id
+        WHERE users.email = ? AND albums.id = ?
+        ORDER BY images.id DESC
+        """, (session.get("email"),album_id))
 
     # Get filenames of album images
     image_filenames = [f"{row["id"]}.{row["extension"]}" for row in cursor.fetchall()]
@@ -386,7 +405,7 @@ def get_images():
     conn.close()
 
     # Return image filenames
-    return jsonify(ans=image_filenames)
+    return jsonify(image_filenames)
 
 
 
