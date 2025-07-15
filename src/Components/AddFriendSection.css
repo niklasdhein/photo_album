@@ -1,0 +1,17 @@
+#addFriendSectionWrapper {
+    background-color: #eee;
+    border-radius: 5px;
+    margin-top: 1%;
+    padding: 1% 0;
+    width: 100%;
+    display: flex;
+}
+
+#addFriendSectionWrapper input, #addFriendSectionWrapper button {
+    font-size: 15px;
+    padding: 0.2%;
+}
+
+#addFriendSectionWrapper input {
+    margin: 0 1%;
+}

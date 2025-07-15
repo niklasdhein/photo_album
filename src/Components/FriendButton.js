@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-function FriendButton({ name }) {
-    const [friendName, setFriendName] = useState(name);
-
+function FriendButton({ friendName }) {
     return (
         <div class="friendButtonWrapper">   
             <button>{friendName}</button>

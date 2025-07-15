@@ -1,0 +1,108 @@
+/* Wrapper for complete request component */
+#friendRequestsWrapper {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background-color: #eee;
+    max-height: 500px;
+    width: 400px;
+    top: 50px;
+    right: 0px;
+    border-radius: 20px;
+    padding: 1%;
+}
+
+/* Wrapper for control bar */
+#friendRequestsWrapperControlBar {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 3%;
+    display: flex;
+    justify-content: space-evenly;
+    border-radius: 20px;
+    background-color: white;
+}
+
+#friendRequestsWrapperControlBar button {
+    color: #333;
+    background-color: #eee;
+    padding: 2%;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: 0.2s ease;
+}
+
+#friendRequestsWrapperControlBar button:hover {
+    scale: 1.1;
+    color: #777;
+}
+
+#friendRequestsWrapperControlBar .friendRequestsWrapperControlBarSelected {
+    border: 2px solid #333;
+}
+
+/* Wraps all loaded requests */
+#friendRequestsDisplayer {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 5%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: scroll;
+    border-radius: 20px;
+    background-color: white;
+}
+
+/* Wraps each request */
+.friendRequest {
+    padding: 3%;
+    background-color: #eee;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.friendRequest p {
+    color: #333;
+    font-size: 16px;
+}
+
+/* Wraps the options the user has with friend requests */ 
+.receivedRequestOptions {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.receivedRequestOptions button {
+    background: none;
+    border: none;
+    width: 35px;
+    aspect-ratio: 1/1;
+}
+
+.receivedRequestOptions .decline img {
+    width: 20px;
+    transition: 0.2s ease;
+}
+
+.receivedRequestOptions .decline:hover img{
+    filter: invert(1);
+    scale: 1.15;
+}
+
+.receivedRequestOptions .accept img {
+    width: 25px;
+    transition: 0.2s ease;
+}
+
+.receivedRequestOptions .accept:hover img {
+    filter: invert(1);
+    scale: 1.15;
+}

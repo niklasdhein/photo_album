@@ -30,6 +30,50 @@ def get_conn_and_cursor():
 
     return conn, cursor
 
+def get_user_id_by_email(email):
+    """
+    Returns the user id to given user email. 
+    If no user with this email was found, the function returns None. 
+    """
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT id
+    FROM users
+    WHERE email = ?
+    """, (email,))
+    row = cursor.fetchone()
+    conn.close()
+    return row["id"] if row else None
+
+def is_user_logged_in():
+    """
+    Checks, by using the session, if the user is logged in.
+    Returns True if he is and False if he is not.
+    """
+    return session.get("isLoggedIn") == True
+
+def check_if_friendship_exists(user_id, friend_id):
+    if user_id < friend_id:
+        user_id_1 = user_id
+        user_id_2 = friend_id
+    else:
+        user_id_1 = friend_id
+        user_id_2 = user_id
+
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT *
+    FROM friendships
+    WHERE user_id_1 = ? AND user_id_2 = ?
+    """, (user_id_1, user_id_2))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row: return True
+    return False
+
+
+
 # +-------+
 # | LOGIN |
 # +-------+
@@ -183,8 +227,6 @@ def get_albums():
     if not session.get("isLoggedIn"):
         return jsonify(ans="You're not logged in"), 400
 
-    amount = int(request.args.get("amount"))
-
     # Connect database
     conn, cursor = get_conn_and_cursor()
 
@@ -198,7 +240,7 @@ def get_albums():
     ORDER BY albums.id DESC
     """, (session.get("email"),))
 
-    albums_data = cursor.fetchmany(amount)
+    albums_data = cursor.fetchall()
     conn.close()
 
     return jsonify([{"id": row["id"], "name": row["name"]} for row in albums_data])
@@ -983,6 +1025,417 @@ def delete_tag_from_image():
         conn.commit()
         conn.close()
         return jsonify(ans=f"Deleted connection between tag {tag_id} and image {image_id}")
+
+
+
+# +------------+
+# | ADD FRIEND |
+# +------------+
+
+@app.route("/add_friend", methods=["POST"])
+def add_friend():
+    # Check if user is logged in
+    if not session.get("isLoggedIn"):
+        return jsonify(ans="Unauthorized"), 401
+    
+    # Check for bad request
+    data = request.get_json()
+    if not data.get("friendName"):
+        return jsonify(ans="Bad request"), 400
+    friend_name = data.get("friendName")
+
+    # Check if the user wants to add himself
+    if friend_name == session.get("email"):
+        return jsonify(ans="Bad request"), 400
+
+    # Check if the wanted friend is valid, if so get his id
+    conn, cursor = get_conn_and_cursor()
+    friend_id = get_user_id_by_email(friend_name)
+    if not friend_id:
+        return jsonify(ans=f"User {friend_name} not found"), 404
+
+    # Get id of logged in user
+    cursor.execute("""
+    SELECT id
+    FROM users
+    WHERE email = ?
+    """, (session.get("email"),))
+    logged_in_user_id = cursor.fetchone()["id"] 
+
+    # The smaller id is user_id_1 and the greater one is user_id_2
+    user_id_1 = None
+    user_id_2 = None
+    if logged_in_user_id < friend_id:
+        user_id_1 = logged_in_user_id
+        user_id_2 = friend_id
+    else:
+        user_id_1 = friend_id
+        user_id_2 = logged_in_user_id
+
+    # Before creating the friendship, check if the friendship already exists
+    cursor.execute("""
+    SELECT *
+    FROM friendships
+    WHERE user_id_1 = ? AND user_id_2 = ?
+    """, (user_id_1, user_id_2))
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return jsonify(ans=f"You are already friends with {friend_name}"), 409
+
+    try:
+        # Actually create the friendship
+        cursor.execute("""
+        INSERT INTO friendships (user_id_1, user_id_2)
+        VALUES (?, ?)
+        """, (user_id_1, user_id_2))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        # Catch error when creation goes wrong
+        conn.rollback()
+        return jsonify(ans="Friendship could not be created"), 500
+    finally:
+        conn.close()
+
+    return jsonify(ans=f"{session.get("email")} ({logged_in_user_id}) and {friend_name} ({friend_id}) are now friends"), 200
+
+
+
+# +-------------+
+# | GET FRIENDS |
+# +-------------+
+
+@app.route("/get_friends", methods=["GET"])
+def get_friends():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Get user's id
+    user_id = get_user_id_by_email(session.get("email"))
+
+    # Get all friend ids of user from database
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT u.email AS friend_email, u.id AS friend_id
+    FROM friendships AS f
+    JOIN users u 
+    ON u.id = CASE
+                WHEN f.user_id_1 = ? THEN f.user_id_2
+                ELSE f.user_id_1
+              END
+    WHERE f.user_id_1 = ? OR f.user_id_2 = ?
+    """, (user_id, user_id, user_id))
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Return an empty list if user has no friends
+    if not rows: return jsonify([]), 200
+
+    # Get each friends id and email and store nicely in list of objects
+    friends = [{"id": r["friend_id"], "email": r["friend_email"]} for r in rows]
+
+    return jsonify(friends), 200
+
+
+
+# +---------------+
+# | REMOVE FRIEND |
+# +---------------+
+
+@app.route("/remove_friend", methods=["POST"])
+def remove_friend():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Check for bad request
+    data = request.get_json()
+    friend_id = data.get("friendId")
+
+    if not friend_id: return jsonify(ans="Bad request"), 400
+    try: friend_id = int(friend_id)
+    except ValueError: return jsonify(ans="Bad request"), 400
+
+    # Get user id
+    user_id = get_user_id_by_email(session.get("email"))
+
+    # Check if friendship requested to delete actually exists
+    if not check_if_friendship_exists(user_id, friend_id):
+        return jsonify("Friendship does not exist"), 404
+    
+    # Actually remove the friendship
+    if user_id < friend_id:
+        user_id_1 = user_id
+        user_id_2 = friend_id
+    else:
+        user_id_1 = friend_id
+        user_id_2 = user_id
+
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    DELETE FROM friendships
+    WHERE user_id_1 = ? AND user_id_2 = ?
+    """, (user_id_1, user_id_2))
+    conn.commit()
+    conn.close()
+
+    return jsonify(ans=f"Removed friendship between {user_id_1} and {user_id_2}")
+
+
+
+# +--------------------+
+# | ADD FRIEND REQUEST |
+# +--------------------+
+
+@app.route("/add_friend_request", methods=["POST"])
+def add_friend_request():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Check for bad request
+    data = request.get_json()
+    if not data.get("friendName"):
+        return jsonify(ans="Bad request"), 400
+    friend_name = data.get("friendName")
+
+    # Check if the user wants to add himself
+    if friend_name == session.get("email"):
+        return jsonify(ans="Bad request"), 400
+
+    # Get id of the requested user
+    to_user_id = get_user_id_by_email(friend_name)
+    if not to_user_id:
+        return jsonify(ans=f"User {friend_name} not found"), 404
+
+    # Get id of the logged in user
+    from_user_id = get_user_id_by_email(session.get("email"))
+
+    # Check if the friend request already exists
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT *
+    FROM friend_requests
+    WHERE from_user_id = ? AND to_user_id = ?
+    """, (from_user_id, to_user_id))
+    row = cursor.fetchone()
+    
+    if row: 
+        conn.close()
+        return jsonify(ans="Request already sent"), 409
+
+    # Check if the friendship itself already exists
+    if from_user_id < to_user_id:
+        user_id_1 = from_user_id
+        user_id_2 = to_user_id
+    else:
+        user_id_1 = to_user_id
+        user_id_2 = from_user_id
+    
+    cursor.execute("""
+    SELECT *
+    FROM friendships
+    WHERE user_id_1 = ? AND user_id_2 = ?
+    """, (user_id_1, user_id_2))
+    row = cursor.fetchone()
+    if row:
+        conn.close()
+        return jsonify(ans="You're already friends with the requested user"), 409
+
+    # Actually create the request in the database
+    try:
+        cursor.execute("""
+        INSERT INTO friend_requests (from_user_id, to_user_id)
+        VALUES (?, ?)
+        """, (from_user_id, to_user_id))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return jsonify(ans="Error while creating friend request"), 500
+    finally:
+        conn.close()
+
+    return jsonify(ans=f"Created friendrequest from {session.get("email")} ({from_user_id}) to {friend_name} ({to_user_id})"), 200
+
+
+
+# +---------------------+
+# | GET FRIEND REQUESTS |
+# +---------------------+
+
+@app.route("/get_friend_requests", methods=["GET"])
+def get_friend_requests():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Get id of the logged in user
+    user_id = get_user_id_by_email(session.get("email"))
+
+    # Get all requests sent to and by the user
+    friend_requests = {"toUser": [], "byUser": []}
+    conn, cursor = get_conn_and_cursor()
+
+    # Get all requests sent to the user
+    cursor.execute("""
+    SELECT friend_requests.from_user_id, users.email
+    FROM friend_requests
+    JOIN users ON friend_requests.from_user_id = users.id
+    WHERE to_user_id = ?
+    """, (user_id,))
+    rows = cursor.fetchall()
+
+    if rows:
+        friend_requests["toUser"] = [{"id": r["from_user_id"], "email": r["email"]} for r in rows]
+
+    # Get all requests sent by the user
+    cursor.execute("""
+    SELECT friend_requests.to_user_id, users.email
+    FROM friend_requests
+    JOIN users ON friend_requests.to_user_id = users.id
+    WHERE friend_requests.from_user_id = ?
+    """, (user_id,))
+    rows = cursor.fetchall()
+
+    if rows:
+        friend_requests["byUser"] = [{"id": r["to_user_id"], "email": r["email"]} for r in rows]
+
+    conn.close()
+    return jsonify(friend_requests), 200
+
+
+
+# +------------------------+
+# | DELETE REQUEST TO USER |
+# +------------------------+
+
+@app.route("/delete_request_to_user", methods=["POST"])
+def delete_request_to_user():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Get the id of the user who sent the request from post request
+    data = request.get_json()
+    from_user_id = data.get("fromUserId")
+
+    # Check for bad request
+    if not from_user_id: return jsonify(ans="Bad request"), 400
+    try: from_user_id = int(from_user_id)
+    except ValueError: return jsonify(ans="Bad request"), 400
+
+    # Get the id of the logged in user
+    to_user_id = get_user_id_by_email(session.get("email"))
+
+    # Actually try to delete the request from the database
+    conn, cursor = get_conn_and_cursor()
+    try:
+        cursor.execute("""
+        DELETE FROM friend_requests
+        WHERE from_user_id = ? AND to_user_id = ?
+        """, (from_user_id, to_user_id))
+        conn.commit()
+    except sqlite3.IntegrityError: 
+        conn.rollback()
+        return jsonify(ans="Error while trying to delete the friendrequest"), 500
+    finally:
+        conn.close()
+
+    return jsonify(ans=f"Deleted request from {from_user_id} to {to_user_id}"), 200
+
+
+
+# +------------------------+
+# | DELETE REQUEST BY USER |
+# +------------------------+
+
+@app.route("/delete_request_by_user", methods=["POST"])
+def delete_request_by_user():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Get the id of the user who received the friend request
+    data = request.get_json()
+    to_user_id = data.get("toUserId")
+
+    # Check for bad request
+    if not to_user_id: return jsonify(ans="Bad request"), 400
+    try: to_user_id = int(to_user_id)
+    except ValueError: return jsonify(ans="Bad request"), 400
+
+    # Get the id of the logged in user
+    from_user_id = get_user_id_by_email(session.get("email"))
+
+    # Actually try to delete the request from the database
+    conn, cursor = get_conn_and_cursor()
+    try:
+        cursor.execute("""
+        DELETE FROM friend_requests
+        WHERE from_user_id = ? AND to_user_id = ?
+        """, (from_user_id, to_user_id))
+        conn.commit()
+    except sqlite3.IntegrityError: 
+        conn.rollback()
+        return jsonify(ans="Error while trying to delete the friendrequest"), 500
+    finally:
+        conn.close()
+
+    return jsonify(ans=f"Deleted request from {from_user_id} to {to_user_id}"), 200    
+
+
+
+# +----------------+
+# | ACCEPT REQUEST |
+# +----------------+
+
+@app.route("/accept_request", methods=["POST"])
+def accept_request():
+    # Check if user is authorized
+    if not is_user_logged_in(): return jsonify(ans="Unauthorized"), 401
+
+    # Get the id of the user who sent the request from post request
+    data = request.get_json()
+    from_user_id = data.get("fromUserId")
+
+    # Check for bad request
+    if not from_user_id: return jsonify(ans="Bad request"), 400
+    try: from_user_id = int(from_user_id)
+    except ValueError: return jsonify(ans="Bad request"), 400
+
+    # Get the id of the logged in user
+    to_user_id = get_user_id_by_email(session.get("email"))
+
+    # Check if the friendship the user wants to accept already exists
+    user_id_1 = min(from_user_id, to_user_id)
+    user_id_2 = max(from_user_id, to_user_id)
+    
+    conn, cursor = get_conn_and_cursor()
+    cursor.execute("""
+    SELECT *
+    FROM friendships
+    WHERE user_id_1 = ? AND user_id_2 = ?
+    """, (user_id_1, user_id_2))
+    row = cursor.fetchone()
+
+    if row:
+        conn.close()
+        return jsonify(ans="You're already friends with the user you want to receive the friendrequest from"), 409
+
+    # Try to remove the friend request from database and create the friendship
+    try:
+        cursor.execute("""
+        DELETE FROM friend_requests
+        WHERE from_user_id = ? AND to_user_id = ?
+        """, (from_user_id, to_user_id))
+
+        cursor.execute("""
+        INSERT INTO friendships (user_id_1, user_id_2)
+        VALUES (?, ?)
+        """, (user_id_1, user_id_2))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        return jsonify(ans="Error while trying to establish the friendship"), 500
+    finally:
+        conn.close()
+
+    return jsonify(ans=f"Accepted request by {from_user_id} and created friendship between {user_id_1} and {user_id_2}"), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

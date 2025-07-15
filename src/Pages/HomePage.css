@@ -1,4 +1,10 @@
+#homePageWrapperWrapper {
+    width: 100%;
+}
+
 #homePageWrapper {
+    width: 100%;
+    box-sizing: border-box;
     padding: 2%;
     display: flex;
     flex-direction: column;
@@ -9,6 +15,7 @@
 /* --- top bar --- */
 #homePageTop {
     width: 100%;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -22,11 +29,38 @@
     scale: 1.01; 
 }
 
+#homePageTopRight {
+    display: flex;
+    width: 7%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#homePageTopRight > button {
+    border: none;
+    background: none;
+    transition: 0.2s ease;
+}
+
+#homePageTopRight > button:hover {
+    scale: 1.15;
+}
+
+#homePageTopRight > button > img {
+    width: 30px;
+    transition: 0.2s ease;
+}
+
+#homePageTopRight > button > img:hover {
+    filter: invert(0.7)
+}
+
 
 
 /* --- albums --- */
 #homePageAlbumsWrapper {
     margin-top: 5%;
+    width: 100%;
 }
 
 #homePageAlbumsTop {
@@ -59,11 +93,13 @@
 
 #homePageAlbums {
     margin-top: 1%;
-    column-count: 6;
-    column-gap: 1%;
+    padding: 1%;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
 }
 
-#homePageAlbums p {
+#homePageAlbums p, #homePageFriends p {
     color: #777;
     font-style: italic;
 }
@@ -80,21 +116,22 @@
     filter: invert(0.8);
 }
 
-.albumButtonWrapper button {
-    width: 100%;
-    margin-bottom: 3%;
-    border: none;
-    border-radius: 20%;
-    aspect-ratio: 1 / 1;
-}
-
 .albumWrapper {
-    position: relative;
+    flex-shrink: 0;
+    width: 250px;
     transition: 0.2s ease;
 }
 
 .albumWrapper:hover {
     scale: 1.02;
+}
+
+.albumButtonWrapper button {
+    width: 100%;
+    aspect-ratio: 1/1;
+    border: none;
+    border-radius: 20%;
+    font-size: 15px;
 }
 
 .albumDeleteButton {
@@ -168,10 +205,13 @@
     width: 35px;
 }
 
+/* Wrapper for rendering friends */
 #homePageFriends {
     margin-top: 1%;
-    column-count: 12;
-    column-gap: 1%;
+    padding: 1%;
+    display: flex;
+    gap: 10px;
+    overflow: scroll;
 }
 
 #homePageAddFriendButton, #homePageAddFriendButton img {
@@ -186,9 +226,52 @@
     filter: invert(0.8);
 }
 
+/* Wraps each friend button */
+.friendWrapper {
+    flex-shrink: 0;
+    position: relative;
+    width: 150px;
+}
+
 .friendButtonWrapper button {
     width: 100%;
     border: none;
     border-radius: 50%;
     aspect-ratio: 1 / 1;
+}
+
+.friendDeleteButton {
+    position: absolute;
+    z-index: 100;
+    top: 5px;
+    right: 5px;
+    padding: 3%;
+    cursor: pointer;
+    display: none;
+    border: none;
+    border-radius: 10px;
+    background-color: #FD151B88;
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: 0.2s ease;
+}
+
+.friendWrapper:hover .friendDeleteButton {
+    display: flex;
+    align-items: center;
+}
+
+.friendDeleteButton:hover {
+    background-color: #c4111788;
+}
+
+.friendDeleteButton img {
+    width: 25px;
+    filter: invert(1);
+    transition: 0.2s ease;
+}
+
+.friendDeleteButton:hover img {
+    filter: invert(0.6)
 }
