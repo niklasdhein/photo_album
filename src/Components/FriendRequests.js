@@ -20,7 +20,7 @@ function FriendRequests({ isShown, reloadFriendsOnRequestAccept }) {
             if (res.ok) getFriendRequests();
             else return res.json();
         })
-        .then((data) => {if (data.ans) alert(data.ans);})
+        .then((data) => {if (data) alert(data.ans);})
         .catch((e) => alert(e));
     }
 
@@ -36,7 +36,7 @@ function FriendRequests({ isShown, reloadFriendsOnRequestAccept }) {
             if (res.ok) getFriendRequests();
             else return res.json();
         })
-        .then((data) => {if (data.ans) alert(data.ans);})
+        .then((data) => {if (data) alert(data.ans);})
         .catch((e) => alert(e));
     }
 
@@ -71,7 +71,7 @@ function FriendRequests({ isShown, reloadFriendsOnRequestAccept }) {
             }
             else return res.json();
         })
-        .then((data) => {if (data.ans) alert(data.ans);})
+        .then((data) => {if (data) alert(data.ans);})
         .catch((e) => alert(e));
     } 
 

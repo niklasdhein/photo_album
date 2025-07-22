@@ -639,7 +639,7 @@ def add_tag():
 
     # EXTRA - Run through database and remove all tags that are not connected to any image
     # This can happen if an image with tags on it or an album which contained images was deleted.
-    # This solution is a bit crappy but gets the job done. It prevents memory flood by unused tags
+    # This solution is a bit crappy but gets the job done. It prevents memory overflow by unused tags
     cursor.execute("""
     DELETE FROM tags
     WHERE tags.id NOT IN (SELECT tag_id FROM tag_connectors)
@@ -1063,14 +1063,8 @@ def add_friend():
     logged_in_user_id = cursor.fetchone()["id"] 
 
     # The smaller id is user_id_1 and the greater one is user_id_2
-    user_id_1 = None
-    user_id_2 = None
-    if logged_in_user_id < friend_id:
-        user_id_1 = logged_in_user_id
-        user_id_2 = friend_id
-    else:
-        user_id_1 = friend_id
-        user_id_2 = logged_in_user_id
+    user_id_1 = min(logged_in_user_id, friend_id)
+    user_id_2 = max(logged_in_user_id, friend_id)
 
     # Before creating the friendship, check if the friendship already exists
     cursor.execute("""
@@ -1163,12 +1157,8 @@ def remove_friend():
         return jsonify("Friendship does not exist"), 404
     
     # Actually remove the friendship
-    if user_id < friend_id:
-        user_id_1 = user_id
-        user_id_2 = friend_id
-    else:
-        user_id_1 = friend_id
-        user_id_2 = user_id
+    user_id_1 = min(user_id, friend_id)
+    user_id_2 = max(user_id, friend_id)
 
     conn, cursor = get_conn_and_cursor()
     cursor.execute("""

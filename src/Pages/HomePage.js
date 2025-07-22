@@ -15,6 +15,8 @@ import LogoutButton from "../Components/LogoutButton";
 import AddFriendSection from "../Components/AddFriendSection";
 import FriendRequests from "../Components/FriendRequests";
 
+import { get_login_status } from "../Scripts/helperFunctions";
+
 function HomePage() {
     const navigation = useNavigate();
 
@@ -42,26 +44,10 @@ function HomePage() {
 
     // Called on page load
     useEffect(() => {
-        loadEmail();
+        get_login_status((res) => alert(res), (res) => setEmail(res.email))
         getAlbums();
         loadFriends();
     }, []);
-
-
-    // Load email of logged in user
-    function loadEmail() {
-        fetch("http://localhost:5000/get_login_status", {
-            method: "GET",
-            credentials: "include",
-        })
-        .then((res) => res.json())
-        .then((data) => {
-            // Redirect user to login if he is not logged in
-            if (!data.email) navigation("/login/");
-            else setEmail(data.email);
-        })
-        .catch((e) => alert(e));
-    }
 
     // Load albums of logged in user
     function getAlbums() {
@@ -140,6 +126,7 @@ function HomePage() {
                         <LogoutButton/>
                     </div>
                 </div>
+                <div id="homePageContentWrapper">
                 <div id="homePageAlbumsWrapper">
                     <div id="homePageAlbumsTop">
                         <h2>Your albums</h2>
@@ -224,6 +211,7 @@ function HomePage() {
                         <p>You have no friends..</p>
                         }
                     </div>
+                </div>
                 </div>
             </div>
         </div>

@@ -21,14 +21,7 @@ function AddFriendSection({ showAddFriendSection, reloadFriends }) {
                     headers: {"Content-Type": "application/json"},
                     body: JSON.stringify({friendName: friendName}),
                 })
-                .then((res) => res.json())
-                .then ((data) => {
-                    alert(data.ans);
-                    if (showAddFriendSection) showAddFriendSection(false);
-                    setFriendName("");
-                    reloadFriends();
-                })
-                /*.then((res) => {if (!res.ok) return res.json()})
+                .then((res) => {if (!res.ok) return res.json()})
                 .then((data) => {
                     if (data) alert(data.ans);
 
@@ -36,7 +29,7 @@ function AddFriendSection({ showAddFriendSection, reloadFriends }) {
                     if (showAddFriendSection) showAddFriendSection();
                     setFriendName("");
                     reloadFriends();
-                })*/
+                })
                 .catch((e) => alert(e));
             }}>Create</button>
         </div>
