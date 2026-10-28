@@ -10,10 +10,12 @@ app = Flask(__name__)
 app.secret_key = "\xe1\t\x16\x7fO\x07}\x84\xcf\x8a\xb2Q&\xd8\xb6\x06\x16\xee\x0c0\xcap4\x04\x84\x8f\x18\xfc\xe7\xf4\r6M\xe6\xc8]d{\xad\xb1r$"
 CORS(app, supports_credentials=True)
 
-DB_FILE_NAME = "app.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE_NAME = os.path.join(BASE_DIR, "app.db")
 DB_NAME = "app"
 
-UPLOADED_IMAGES_FOLDER = "./uploaded_images"
+UPLOADED_IMAGES_FOLDER = os.path.join(BASE_DIR, "uploaded_images")
+os.makedirs(UPLOADED_IMAGES_FOLDER, exist_ok=True)
 
 
 # --- helper functions ---
