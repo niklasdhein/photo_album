@@ -81,3 +81,5 @@ npm start
 The application will open in your browser at **`http://localhost:3000`**.
 
 Note that this project exists only for learning the fundamentals of web applications and simple API calls and therefore is yet unfinished and will probably remain so. Because of that there is no guarantee it will run on your system, feel free to try out and experiment with it anyway.
+
+EDIT: To create an account visit /register and to then login use /login domain.
